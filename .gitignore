@@ -1,0 +1,17 @@
+# Audio files (too large for GitHub)
+audio/*.aiff
+audio/*.wav
+audio/*.mp3
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log

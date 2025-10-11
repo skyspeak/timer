@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morning Timer - Test Mode</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .test-controls h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .test-controls button {
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .test-section {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .test-section:last-child {
+            border-bottom: none;
+        }
+        
+        .test-section h4 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .btn-info {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #2980b9;
+        }
+        
+        .test-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Main Timer Display -->
+        <div id="timer-display">
+            <div id="clock" class="clock">--:--:--</div>
+            <div id="status" class="status">Test Mode</div>
+            <div id="current-interval" class="current-interval"></div>
+        </div>
+
+        <!-- Settings Panel (initially hidden) -->
+        <div id="settings-panel" class="settings-panel hidden">
+            <div class="settings-header">
+                <h2>Timer Settings</h2>
+                <button id="close-settings" class="close-btn">&times;</button>
+            </div>
+
+            <!-- Timer Settings -->
+            <div class="settings-section">
+                <h3>Timer Configuration</h3>
+                <div class="form-group">
+                    <label for="start-time">Start Time:</label>
+                    <input type="time" id="start-time" value="07:00">
+                </div>
+                <div class="form-group">
+                    <label for="end-time">End Time:</label>
+                    <input type="time" id="end-time" value="07:43">
+                </div>
+                <div class="form-group">
+                    <label>Active Days:</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" value="1" checked> Mon</label>
+                        <label><input type="checkbox" value="2" checked> Tue</label>
+                        <label><input type="checkbox" value="3" checked> Wed</label>
+                        <label><input type="checkbox" value="4" checked> Thu</label>
+                        <label><input type="checkbox" value="5" checked> Fri</label>
+                        <label><input type="checkbox" value="6"> Sat</label>
+                        <label><input type="checkbox" value="0"> Sun</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TTS Settings -->
+            <div class="settings-section">
+                <h3>Text-to-Speech</h3>
+                <div class="form-group">
+                    <label for="tts-rate">Speech Rate:</label>
+                    <input type="range" id="tts-rate" min="0.5" max="2.0" step="0.1" value="1.0">
+                    <span id="tts-rate-value">1.0</span>
+                </div>
+                <div class="form-group">
+                    <label for="tts-pitch">Pitch:</label>
+                    <input type="range" id="tts-pitch" min="0.0" max="2.0" step="0.1" value="1.0">
+                    <span id="tts-pitch-value">1.0</span>
+                </div>
+                <div class="form-group">
+                    <label for="tts-volume">Volume:</label>
+                    <input type="range" id="tts-volume" min="0.0" max="1.0" step="0.1" value="1.0">
+                    <span id="tts-volume-value">1.0</span>
+                </div>
+                <div class="form-group">
+                    <label for="tts-voice">Voice:</label>
+                    <select id="tts-voice">
+                        <option value="default">Default</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Audio Settings -->
+            <div class="settings-section">
+                <h3>Audio Settings</h3>
+                <div class="form-group">
+                    <label for="audio-volume">Volume:</label>
+                    <input type="range" id="audio-volume" min="0.0" max="1.0" step="0.1" value="0.8">
+                    <span id="audio-volume-value">0.8</span>
+                </div>
+                <div class="form-group">
+                    <label for="fade-in">Fade In (ms):</label>
+                    <input type="number" id="fade-in" min="0" max="1000" value="200">
+                </div>
+                <div class="form-group">
+                    <label for="fade-out">Fade Out (ms):</label>
+                    <input type="number" id="fade-out" min="0" max="1000" value="200">
+                </div>
+            </div>
+
+            <!-- Interval Management -->
+            <div class="settings-section">
+                <h3>Intervals</h3>
+                <div id="intervals-list" class="intervals-list">
+                    <!-- Intervals will be dynamically generated -->
+                </div>
+                <button id="add-interval" class="btn btn-primary">Add Interval</button>
+            </div>
+
+            <!-- Configuration Actions -->
+            <div class="settings-section">
+                <h3>Configuration</h3>
+                <div class="form-group">
+                    <button id="export-config" class="btn btn-secondary">Export Config</button>
+                    <button id="import-config" class="btn btn-secondary">Import Config</button>
+                    <button id="reset-config" class="btn btn-danger">Reset to Defaults</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Toggle Button -->
+        <button id="settings-toggle" class="settings-toggle">⚙️</button>
+    </div>
+
+    <!-- Test Controls -->
+    <div class="test-controls">
+        <h3>Test Controls</h3>
+        <div class="test-section">
+            <h4>Quick Tests</h4>
+            <button id="test-tts" class="btn btn-primary">Test TTS</button>
+            <button id="test-audio" class="btn btn-primary">Test Audio</button>
+            <button id="test-interval" class="btn btn-primary">Test Interval</button>
+        </div>
+        <div class="test-section">
+            <h4>Morning Routine Simulation</h4>
+            <button id="simulate-7am" class="btn btn-success">Start 7:00 AM</button>
+            <button id="simulate-7-05" class="btn btn-warning">Jump to 7:05 AM</button>
+            <button id="simulate-7-10" class="btn btn-warning">Jump to 7:10 AM</button>
+            <button id="simulate-7-15" class="btn btn-warning">Jump to 7:15 AM</button>
+            <button id="simulate-7-35" class="btn btn-warning">Jump to 7:35 AM</button>
+        </div>
+        <div class="test-section">
+            <h4>Speed Controls</h4>
+            <button id="fast-forward" class="btn btn-info">Fast Forward (10x)</button>
+            <button id="normal-speed" class="btn btn-info">Normal Speed</button>
+            <button id="pause-simulation" class="btn btn-secondary">Pause</button>
+        </div>
+        <div class="test-section">
+            <button id="reset-test" class="btn btn-danger">Reset Test</button>
+        </div>
+    </div>
+
+    <!-- Test Info -->
+    <div class="test-info">
+        <div><strong>Test Mode Active</strong></div>
+        <div>Current Time: <span id="current-time"></span></div>
+        <div>Active: <span id="active-status">No</span></div>
+        <div>Elapsed: <span id="elapsed-minutes">0</span> minutes</div>
+        <div>Speed: <span id="simulation-speed">1x</span></div>
+        <div>Next Interval: <span id="next-interval">None</span></div>
+        <div>Status: <span id="simulation-status">Stopped</span></div>
+    </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="import-file" accept=".json" style="display: none;">
+
+    <script src="app.js"></script>
+    <script>
+        // Enhanced test mode
+        class TestMode extends MorningTimer {
+            constructor() {
+                super();
+                this.testMode = true;
+                this.simulatedTime = null;
+                this.simulationSpeed = 1;
+                this.isPaused = false;
+                this.simulationInterval = null;
+                this.setupTestControls();
+                this.startTestClock();
+            }
+
+            setupTestControls() {
+                // Quick tests
+                document.getElementById('test-tts').addEventListener('click', () => {
+                    this.playTTS('This is a test of the text-to-speech system.');
+                });
+
+                document.getElementById('test-audio').addEventListener('click', () => {
+                    this.playAudio('wake_up_routine.aiff');
+                });
+
+                document.getElementById('test-interval').addEventListener('click', () => {
+                    const testInterval = {
+                        id: 999,
+                        minute: 0,
+                        duration: 5,
+                        color: "#FF6B6B",
+                        instruction: "Test interval triggered!",
+                        audio: "wake_up_routine.aiff",
+                        enabled: true
+                    };
+                    this.triggerInterval(testInterval);
+                });
+
+                // Morning routine simulation
+                document.getElementById('simulate-7am').addEventListener('click', () => {
+                    this.startSimulation(7, 0);
+                });
+
+                document.getElementById('simulate-7-05').addEventListener('click', () => {
+                    this.jumpToTime(7, 5);
+                });
+
+                document.getElementById('simulate-7-10').addEventListener('click', () => {
+                    this.jumpToTime(7, 10);
+                });
+
+                document.getElementById('simulate-7-15').addEventListener('click', () => {
+                    this.jumpToTime(7, 15);
+                });
+
+                document.getElementById('simulate-7-35').addEventListener('click', () => {
+                    this.jumpToTime(7, 35);
+                });
+
+                // Speed controls
+                document.getElementById('fast-forward').addEventListener('click', () => {
+                    this.setSimulationSpeed(10);
+                });
+
+                document.getElementById('normal-speed').addEventListener('click', () => {
+                    this.setSimulationSpeed(1);
+                });
+
+                document.getElementById('pause-simulation').addEventListener('click', () => {
+                    this.togglePause();
+                });
+
+                document.getElementById('reset-test').addEventListener('click', () => {
+                    this.resetTest();
+                });
+            }
+
+            startTestClock() {
+                setInterval(() => {
+                    this.updateTestInfo();
+                }, 100);
+            }
+
+            updateTestInfo() {
+                const now = this.simulatedTime || new Date();
+                document.getElementById('current-time').textContent = now.toLocaleTimeString();
+                document.getElementById('active-status').textContent = this.isActive ? 'Yes' : 'No';
+                document.getElementById('simulation-speed').textContent = this.simulationSpeed + 'x';
+                document.getElementById('simulation-status').textContent = this.isPaused ? 'Paused' : 
+                    (this.simulatedTime ? 'Running' : 'Stopped');
+                
+                if (this.isActive) {
+                    const startTime = new Date(now);
+                    const [startHour, startMinute] = this.config.timerSettings.startTime.split(':').map(Number);
+                    startTime.setHours(startHour, startMinute, 0, 0);
+                    const elapsed = Math.floor((now - startTime) / (1000 * 60));
+                    document.getElementById('elapsed-minutes').textContent = elapsed;
+                    
+                    // Find next interval
+                    const nextInterval = this.config.intervals.find(i => 
+                        i.enabled && i.minute > elapsed
+                    );
+                    if (nextInterval) {
+                        document.getElementById('next-interval').textContent = 
+                            `${nextInterval.minute} min: ${nextInterval.instruction.substring(0, 30)}...`;
+                    } else {
+                        document.getElementById('next-interval').textContent = 'None';
+                    }
+                } else {
+                    document.getElementById('elapsed-minutes').textContent = '0';
+                    document.getElementById('next-interval').textContent = 'None';
+                }
+            }
+
+            startSimulation(hour, minute) {
+                this.stopSimulation();
+                this.simulatedTime = new Date();
+                this.simulatedTime.setHours(hour, minute, 0, 0);
+                this.currentTime = this.simulatedTime;
+                this.lastTriggered = -1;
+                this.currentInterval = null;
+                this.checkActiveState();
+                this.updateDisplay();
+                this.updateTestInfo();
+                
+                // Start simulation timer
+                this.simulationInterval = setInterval(() => {
+                    if (!this.isPaused) {
+                        this.advanceTime();
+                    }
+                }, 1000 / this.simulationSpeed);
+                
+                console.log(`Started simulation at ${hour}:${minute.toString().padStart(2, '0')}`);
+            }
+
+            jumpToTime(hour, minute) {
+                this.simulatedTime = new Date();
+                this.simulatedTime.setHours(hour, minute, 0, 0);
+                this.currentTime = this.simulatedTime;
+                this.checkActiveState();
+                this.checkIntervals();
+                this.updateDisplay();
+                this.updateTestInfo();
+                console.log(`Jumped to ${hour}:${minute.toString().padStart(2, '0')}`);
+            }
+
+            advanceTime() {
+                if (this.simulatedTime) {
+                    this.simulatedTime = new Date(this.simulatedTime.getTime() + 1000);
+                    this.currentTime = this.simulatedTime;
+                    this.checkActiveState();
+                    this.checkIntervals();
+                    this.updateDisplay();
+                    this.updateTestInfo();
+                }
+            }
+
+            setSimulationSpeed(speed) {
+                this.simulationSpeed = speed;
+                if (this.simulationInterval) {
+                    clearInterval(this.simulationInterval);
+                    this.simulationInterval = setInterval(() => {
+                        if (!this.isPaused) {
+                            this.advanceTime();
+                        }
+                    }, 1000 / this.simulationSpeed);
+                }
+                console.log(`Simulation speed set to ${speed}x`);
+            }
+
+            togglePause() {
+                this.isPaused = !this.isPaused;
+                console.log(`Simulation ${this.isPaused ? 'paused' : 'resumed'}`);
+            }
+
+            stopSimulation() {
+                if (this.simulationInterval) {
+                    clearInterval(this.simulationInterval);
+                    this.simulationInterval = null;
+                }
+            }
+
+            resetTest() {
+                this.stopSimulation();
+                this.simulatedTime = null;
+                this.currentTime = new Date();
+                this.lastTriggered = -1;
+                this.currentInterval = null;
+                this.isPaused = false;
+                this.simulationSpeed = 1;
+                document.body.style.backgroundColor = '#2c3e50';
+                this.checkActiveState();
+                this.updateDisplay();
+                this.updateTestInfo();
+                console.log('Test reset');
+            }
+
+            // Override updateTime to use simulated time
+            updateTime() {
+                if (this.simulatedTime && !this.isPaused) {
+                    this.currentTime = this.simulatedTime;
+                } else if (!this.simulatedTime) {
+                    this.currentTime = new Date();
+                }
+                this.checkActiveState();
+                this.checkIntervals();
+                this.updateDisplay();
+            }
+        }
+
+        // Initialize test mode
+        document.addEventListener('DOMContentLoaded', () => {
+            window.app = new TestMode();
+        });
+    </script>
+</body>
+</html>
