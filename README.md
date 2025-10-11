@@ -31,8 +31,8 @@ The application includes a comprehensive settings panel where you can:
 
 | Time | Color | TTS Message | Audio File |
 |------|-------|-------------|------------|
-| 7:00 AM | #FF6B6B | "It is time to wake up wake up now! Rise and shine and have an amazing day" | wake_up_routine.aiff |
-| 7:05 AM | #FF4757 | "Time to change your clothes!" | ambulance_siren.wav |
+| 7:00 AM | #FF6B6B | "It is time to wake up wake up now! Rise and shine and have an amazing day" | wake_up_routine.mp3 |
+| 7:05 AM | #FF4757 | "Time to change your clothes!" | ambulance_siren.mp3 |
 | 7:10 AM | #FFA502 | "Time to pee and go eat!" | big_announcement_bells.mp3 |
 | 7:15 AM | #2ED573 | "EAT YOUR FOOD!" | relaxing_music.mp3 |
 | 7:35 AM | #3742FA | "Time to brush and get ready for school, 8 minutes left!" | final_reminder.mp3 |
@@ -57,11 +57,11 @@ timer/
 
 ## Audio Files
 
-**Important**: Audio files are not included in this repository due to GitHub's file size limits. You need to add your own audio files to the `audio/` directory.
+**Note**: Some audio files are included in this repository. Additional audio files may need to be added for the complete experience.
 
 ### Required Audio Files:
-- `wake_up_routine.aiff` - 5-minute wake-up music (AIFF format)
-- `ambulance_siren.wav` - Siren sound (WAV format)  
+- `wake_up_routine.mp3` - 5-minute wake-up music (MP3 format)
+- `ambulance_siren.mp3` - Siren sound (MP3 format)  
 - `big_announcement_bells.mp3` - Bell sounds (MP3 format)
 - `relaxing_music.mp3` - 20-minute relaxing music (MP3 format)
 - `final_reminder.mp3` - Final reminder sound (MP3 format)

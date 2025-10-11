@@ -38,7 +38,7 @@ class MorningTimer {
                     duration: 5,
                     color: "#FF6B6B",
                     instruction: "It is time to wake up wake up now! Rise and shine and have an amazing day",
-                    audio: "wake_up_routine.aiff",
+                    audio: "wake_up_routine.mp3",
                     enabled: true
                 },
                 {
@@ -47,7 +47,7 @@ class MorningTimer {
                     duration: 5,
                     color: "#FF4757",
                     instruction: "Time to change your clothes!",
-                    audio: "ambulance_siren.wav",
+                    audio: "ambulance_siren.mp3",
                     enabled: true
                 },
                 {

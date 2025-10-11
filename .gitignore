@@ -1,7 +1,7 @@
-# Audio files (too large for GitHub)
-audio/*.aiff
-audio/*.wav
-audio/*.mp3
+# Large audio files (exclude only very large files)
+# audio/*.aiff (commented out to allow smaller aiff files)
+# audio/*.wav (commented out to allow smaller wav files)  
+# audio/*.mp3 (commented out to allow smaller mp3 files)
 
 # System files
 .DS_Store
