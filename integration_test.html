@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .audio-test {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .audio-test button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Integration Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Audio File Existence Test</h2>
+        <div id="file-existence-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Audio File Playback Test</h2>
+        <div id="playback-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Configuration Reference Test</h2>
+        <div id="config-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Flickering Effect Test</h2>
+        <button onclick="testFlickering()">Test Flickering Effect</button>
+        <div id="flicker-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Full Integration Test</h2>
+        <button onclick="runFullTest()">Run Complete Integration Test</button>
+        <div id="full-test-results"></div>
+    </div>
+
+    <script>
+        // Audio files that should exist
+        const requiredAudioFiles = [
+            'wake_up_routine.mp3',
+            'ambulance_siren.mp3', 
+            'big_announcement_bells.mp3',
+            'relaxing_music.mp3',
+            'final_reminder.mp3'
+        ];
+
+        // Test audio file existence
+        async function testFileExistence() {
+            const resultsDiv = document.getElementById('file-existence-results');
+            resultsDiv.innerHTML = '<p>Testing file existence...</p>';
+
+            for (const filename of requiredAudioFiles) {
+                try {
+                    const response = await fetch(`audio/${filename}`, { method: 'HEAD' });
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'test-result';
+                    
+                    if (response.ok) {
+                        resultDiv.className += ' success';
+                        resultDiv.textContent = `✅ ${filename} - Found`;
+                    } else {
+                        resultDiv.className += ' error';
+                        resultDiv.textContent = `❌ ${filename} - Not found (${response.status})`;
+                    }
+                    resultsDiv.appendChild(resultDiv);
+                } catch (error) {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = `❌ ${filename} - Error: ${error.message}`;
+                    resultsDiv.appendChild(resultDiv);
+                }
+            }
+        }
+
+        // Test audio playback
+        async function testAudioPlayback() {
+            const resultsDiv = document.getElementById('playback-results');
+            resultsDiv.innerHTML = '<p>Testing audio playback...</p>';
+
+            for (const filename of requiredAudioFiles) {
+                const testDiv = document.createElement('div');
+                testDiv.className = 'audio-test';
+                
+                const statusDiv = document.createElement('div');
+                statusDiv.textContent = `${filename}: `;
+                
+                const playButton = document.createElement('button');
+                playButton.textContent = 'Test Play';
+                playButton.onclick = () => playAudioFile(filename, statusDiv);
+                
+                testDiv.appendChild(statusDiv);
+                testDiv.appendChild(playButton);
+                resultsDiv.appendChild(testDiv);
+            }
+        }
+
+        // Play individual audio file
+        function playAudioFile(filename, statusDiv) {
+            statusDiv.textContent = `${filename}: Playing...`;
+            
+            const audio = new Audio(`audio/${filename}`);
+            audio.volume = 0.3; // Lower volume for testing
+            
+            audio.oncanplaythrough = () => {
+                statusDiv.textContent = `${filename}: ✅ Can play`;
+                statusDiv.style.color = 'green';
+            };
+            
+            audio.onerror = (e) => {
+                statusDiv.textContent = `${filename}: ❌ Error - ${e.message || 'Unknown error'}`;
+                statusDiv.style.color = 'red';
+            };
+            
+            audio.onended = () => {
+                statusDiv.textContent = `${filename}: ✅ Playback completed`;
+                statusDiv.style.color = 'green';
+            };
+            
+            audio.play().catch(err => {
+                statusDiv.textContent = `${filename}: ❌ Playback failed - ${err.message}`;
+                statusDiv.style.color = 'red';
+            });
+        }
+
+        // Test configuration references
+        function testConfigurationReferences() {
+            const resultsDiv = document.getElementById('config-results');
+            resultsDiv.innerHTML = '<p>Testing configuration references...</p>';
+
+            // Load the app.js file and check for audio references
+            fetch('app.js')
+                .then(response => response.text())
+                .then(code => {
+                    const results = [];
+                    
+                    // Check for each audio file in the code
+                    requiredAudioFiles.forEach(filename => {
+                        if (code.includes(filename)) {
+                            results.push(`✅ ${filename} - Referenced in app.js`);
+                        } else {
+                            results.push(`❌ ${filename} - NOT referenced in app.js`);
+                        }
+                    });
+                    
+                    // Check for audio settings
+                    if (code.includes('audioSettings')) {
+                        results.push('✅ Audio settings configuration found');
+                    } else {
+                        results.push('❌ Audio settings configuration missing');
+                    }
+                    
+                    // Check for playAudio method
+                    if (code.includes('playAudio')) {
+                        results.push('✅ playAudio method found');
+                    } else {
+                        results.push('❌ playAudio method missing');
+                    }
+                    
+                    // Display results
+                    results.forEach(result => {
+                        const resultDiv = document.createElement('div');
+                        resultDiv.className = 'test-result';
+                        resultDiv.className += result.startsWith('✅') ? ' success' : ' error';
+                        resultDiv.textContent = result;
+                        resultsDiv.appendChild(resultDiv);
+                    });
+                })
+                .catch(error => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = `❌ Error loading app.js: ${error.message}`;
+                    resultsDiv.appendChild(resultDiv);
+                });
+        }
+
+        // Test flickering effect
+        function testFlickering() {
+            const resultsDiv = document.getElementById('flicker-results');
+            resultsDiv.innerHTML = '<p>Testing flickering effect...</p>';
+            
+            // Add flickering classes
+            document.body.classList.add('flickering', 'light-flash');
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result success';
+            resultDiv.textContent = '✅ Flickering effect activated - check screen for 3 seconds';
+            resultsDiv.appendChild(resultDiv);
+            
+            // Stop after 3 seconds
+            setTimeout(() => {
+                document.body.classList.remove('flickering', 'light-flash');
+                const stopDiv = document.createElement('div');
+                stopDiv.className = 'test-result success';
+                stopDiv.textContent = '✅ Flickering effect stopped';
+                resultsDiv.appendChild(stopDiv);
+            }, 3000);
+        }
+
+        // Run full integration test
+        async function runFullTest() {
+            const resultsDiv = document.getElementById('full-test-results');
+            resultsDiv.innerHTML = '<p>Running full integration test...</p>';
+            
+            let allTestsPassed = true;
+            const results = [];
+            
+            // Test 1: File existence
+            for (const filename of requiredAudioFiles) {
+                try {
+                    const response = await fetch(`audio/${filename}`, { method: 'HEAD' });
+                    if (response.ok) {
+                        results.push(`✅ ${filename} exists`);
+                    } else {
+                        results.push(`❌ ${filename} missing`);
+                        allTestsPassed = false;
+                    }
+                } catch (error) {
+                    results.push(`❌ ${filename} error: ${error.message}`);
+                    allTestsPassed = false;
+                }
+            }
+            
+            // Test 2: Configuration
+            try {
+                const response = await fetch('app.js');
+                const code = await response.text();
+                
+                if (code.includes('audioSettings') && code.includes('playAudio')) {
+                    results.push('✅ Audio configuration found');
+                } else {
+                    results.push('❌ Audio configuration missing');
+                    allTestsPassed = false;
+                }
+            } catch (error) {
+                results.push(`❌ Configuration test error: ${error.message}`);
+                allTestsPassed = false;
+            }
+            
+            // Test 3: CSS animations
+            try {
+                const response = await fetch('styles.css');
+                const css = await response.text();
+                
+                if (css.includes('screenFlicker') && css.includes('lightFlash')) {
+                    results.push('✅ Flickering animations found');
+                } else {
+                    results.push('❌ Flickering animations missing');
+                    allTestsPassed = false;
+                }
+            } catch (error) {
+                results.push(`❌ CSS test error: ${error.message}`);
+                allTestsPassed = false;
+            }
+            
+            // Display results
+            results.forEach(result => {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'test-result';
+                resultDiv.className += result.startsWith('✅') ? ' success' : ' error';
+                resultDiv.textContent = result;
+                resultsDiv.appendChild(resultDiv);
+            });
+            
+            // Final result
+            const finalDiv = document.createElement('div');
+            finalDiv.className = 'test-result';
+            finalDiv.className += allTestsPassed ? ' success' : ' error';
+            finalDiv.textContent = allTestsPassed ? 
+                '🎉 ALL TESTS PASSED - Integration successful!' : 
+                '⚠️ SOME TESTS FAILED - Check individual results above';
+            resultsDiv.appendChild(finalDiv);
+        }
+
+        // Run tests on page load
+        window.onload = function() {
+            testFileExistence();
+            testAudioPlayback();
+            testConfigurationReferences();
+        };
+    </script>
+</body>
+</html>
