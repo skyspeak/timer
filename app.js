@@ -9,6 +9,8 @@ class MorningTimer {
         this.clockInterval = null;
         this.tts = null;
         this.audio = null;
+        this.flickerTimeout = null;
+        this.flickerOverlay = null;
         
         this.init();
     }
@@ -268,6 +270,9 @@ class MorningTimer {
     async triggerInterval(interval) {
         this.lastTriggered = interval.id;
         this.currentInterval = interval;
+
+        // Start flickering effect for 30 seconds
+        this.startFlickering();
 
         // Update background color
         document.body.style.backgroundColor = interval.color;
@@ -548,6 +553,43 @@ class MorningTimer {
         document.getElementById('audio-volume-value').textContent = this.config.audioSettings.volume.toFixed(1);
         document.getElementById('fade-in').value = this.config.audioSettings.fadeIn;
         document.getElementById('fade-out').value = this.config.audioSettings.fadeOut;
+    }
+
+    // Start the flickering effect for 30 seconds
+    startFlickering() {
+        // Clear any existing flickering
+        this.stopFlickering();
+
+        // Add flickering classes to body and create overlay
+        document.body.classList.add('flickering', 'light-flash');
+        
+        // Create flicker overlay for more dramatic effect
+        this.flickerOverlay = document.createElement('div');
+        this.flickerOverlay.className = 'flicker-overlay';
+        document.body.appendChild(this.flickerOverlay);
+
+        // Stop flickering after 30 seconds
+        this.flickerTimeout = setTimeout(() => {
+            this.stopFlickering();
+        }, 30000);
+    }
+
+    // Stop the flickering effect
+    stopFlickering() {
+        // Clear timeout if it exists
+        if (this.flickerTimeout) {
+            clearTimeout(this.flickerTimeout);
+            this.flickerTimeout = null;
+        }
+
+        // Remove flickering classes
+        document.body.classList.remove('flickering', 'light-flash');
+
+        // Remove flicker overlay if it exists
+        if (this.flickerOverlay) {
+            this.flickerOverlay.remove();
+            this.flickerOverlay = null;
+        }
     }
 }
 
