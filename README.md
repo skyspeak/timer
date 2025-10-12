@@ -68,9 +68,25 @@ timer/
 
 See `download_audio_guide.md` for detailed instructions on finding free audio files. The application will work with just text-to-speech if audio files are missing.
 
+## Live Demo
+
+🌐 **Try it now**: [https://skyspeak.github.io/timer/](https://skyspeak.github.io/timer/)
+
+The application is deployed on GitHub Pages and ready to use!
+
 ## Development
 
 The application is built with vanilla JavaScript, HTML5, and CSS3. No external dependencies are required.
+
+### Local Development
+
+1. Clone the repository: `git clone https://github.com/skyspeak/timer.git`
+2. Start a local server: `python3 -m http.server 8000`
+3. Open http://localhost:8000 in your browser
+
+### GitHub Pages Deployment
+
+The application is automatically deployed to GitHub Pages using GitHub Actions. The deployment workflow is configured in `.github/workflows/deploy.yml`.
 
 ### Key Components
 

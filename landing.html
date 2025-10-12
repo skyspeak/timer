@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morning Timer - Custom Morning Routine</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary {
+            background: #FF6B6B;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #FF5252;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .features {
+            text-align: left;
+            margin: 2rem 0;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+        }
+        .features h3 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .features li:before {
+            content: "✨ ";
+            margin-right: 0.5rem;
+        }
+        .routine {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+        .routine h3 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .time-slot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .time {
+            font-weight: bold;
+            color: #FFEAA7;
+        }
+        .message {
+            font-style: italic;
+        }
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌅 Morning Timer</h1>
+        <p class="subtitle">Your Custom Morning Routine Assistant</p>
+        
+        <div class="buttons">
+            <a href="index.html" class="btn btn-primary">Start Timer</a>
+            <a href="test.html" class="btn btn-secondary">Test Mode</a>
+        </div>
+
+        <div class="features">
+            <h3>Features</h3>
+            <ul>
+                <li>43-minute structured morning routine (7:00-7:43 AM)</li>
+                <li>Custom voice prompts for each step</li>
+                <li>Full-screen color transitions</li>
+                <li>Audio playback with your favorite sounds</li>
+                <li>Text-to-speech announcements</li>
+                <li>Comprehensive settings panel</li>
+                <li>Test mode with simulation controls</li>
+                <li>Works on desktop and mobile</li>
+            </ul>
+        </div>
+
+        <div class="routine">
+            <h3>Your Morning Routine</h3>
+            <div class="time-slot">
+                <span class="time">7:00 AM</span>
+                <span class="message">"It is time to wake up wake up now! Rise and shine and have an amazing day"</span>
+            </div>
+            <div class="time-slot">
+                <span class="time">7:05 AM</span>
+                <span class="message">"Time to change your clothes!"</span>
+            </div>
+            <div class="time-slot">
+                <span class="time">7:10 AM</span>
+                <span class="message">"Time to pee and go eat!"</span>
+            </div>
+            <div class="time-slot">
+                <span class="time">7:15 AM</span>
+                <span class="message">"EAT YOUR FOOD!" (20 minutes)</span>
+            </div>
+            <div class="time-slot">
+                <span class="time">7:35 AM</span>
+                <span class="message">"Time to brush and get ready for school, 8 minutes left!"</span>
+            </div>
+        </div>
+
+        <p style="margin-top: 2rem; opacity: 0.8; font-size: 0.9rem;">
+            Built with ❤️ using vanilla JavaScript, HTML5, and CSS3
+        </p>
+    </div>
+</body>
+</html>
