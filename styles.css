@@ -47,10 +47,13 @@ body {
 }
 
 .current-interval {
-    font-size: 1.5rem;
-    opacity: 0.7;
+    font-size: 3rem;
+    font-weight: 300;
+    opacity: 0.9;
     max-width: 80%;
     line-height: 1.4;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    letter-spacing: 0.05em;
 }
 
 /* Settings Panel */

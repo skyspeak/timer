@@ -11,6 +11,7 @@ class MorningTimer {
         this.audio = null;
         this.flickerTimeout = null;
         this.flickerOverlay = null;
+        this.lastWarningTriggered = -1;
         
         this.init();
     }
@@ -77,6 +78,15 @@ class MorningTimer {
                     color: "#3742FA",
                     instruction: "Time to brush and get ready for school, 8 minutes left!",
                     audio: "final_reminder.mp3",
+                    enabled: true
+                },
+                {
+                    id: 6,
+                    minute: 40,
+                    duration: 3,
+                    color: "#9B59B6",
+                    instruction: "Wear your shoes, grab your jackets and backpack!",
+                    audio: "ambulance_siren.mp3",
                     enabled: true
                 }
             ],
@@ -256,6 +266,18 @@ class MorningTimer {
             return;
         }
 
+        // Check for warning announcements (60 seconds before each interval)
+        const warningMinute = elapsedMinutes - 1; // 1 minute = 60 seconds before
+        if (warningMinute >= 0) {
+            const warningInterval = this.config.intervals.find(i => 
+                i.enabled && i.minute === elapsedMinutes && i.id !== this.lastWarningTriggered
+            );
+            
+            if (warningInterval) {
+                this.triggerWarning(warningInterval);
+            }
+        }
+
         // Find matching interval
         const interval = this.config.intervals.find(i => 
             i.enabled && i.minute === elapsedMinutes && i.id !== this.lastTriggered
@@ -264,6 +286,16 @@ class MorningTimer {
         if (interval) {
             this.triggerInterval(interval);
         }
+    }
+
+    // Trigger a warning announcement
+    async triggerWarning(interval) {
+        this.lastWarningTriggered = interval.id;
+        
+        const warningMessage = `Warning! In 60 seconds, a new stage will begin: ${interval.instruction}`;
+        
+        // Play warning TTS
+        await this.playTTS(warningMessage);
     }
 
     // Trigger an interval
@@ -317,7 +349,7 @@ class MorningTimer {
         });
     }
 
-    // Play audio file
+    // Play audio file for at least 60 seconds
     playAudio(filename) {
         return new Promise((resolve) => {
             if (!filename) {
@@ -333,15 +365,27 @@ class MorningTimer {
 
             this.audio = new Audio(`audio/${filename}`);
             this.audio.volume = this.config.audioSettings.volume;
+            this.audio.loop = true; // Enable looping
 
-            this.audio.onended = resolve;
+            // Set up 60-second timer
+            const playDuration = 60000; // 60 seconds in milliseconds
+            const stopTimer = setTimeout(() => {
+                if (this.audio) {
+                    this.audio.pause();
+                    this.audio.currentTime = 0;
+                }
+                resolve();
+            }, playDuration);
+
             this.audio.onerror = () => {
                 console.warn(`Audio file not found: ${filename}`);
+                clearTimeout(stopTimer);
                 resolve();
             };
 
             this.audio.play().catch(err => {
                 console.warn('Audio playback failed:', err);
+                clearTimeout(stopTimer);
                 resolve();
             });
         });
