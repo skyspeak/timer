@@ -23,6 +23,8 @@ class MorningTimer {
         this.startClock();
         this.renderIntervals();
         this.updateDisplay();
+        this.setupAutoTrigger();
+        this.requestAudioPermissions();
     }
 
     // Load configuration from localStorage or use defaults
@@ -114,6 +116,24 @@ class MorningTimer {
 
     // Setup event listeners
     setupEventListeners() {
+        // Browser visibility change - keep timer running in background
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                console.log('Page hidden - timer continues in background');
+            } else {
+                console.log('Page visible - timer active');
+            }
+        });
+
+        // Enable audio on any user interaction
+        document.addEventListener('click', () => {
+            this.enableAudio();
+        }, { once: true });
+
+        document.addEventListener('keydown', () => {
+            this.enableAudio();
+        }, { once: true });
+
         // Settings panel toggle
         document.getElementById('settings-toggle').addEventListener('click', () => {
             this.toggleSettings();
@@ -222,6 +242,145 @@ class MorningTimer {
         }
     }
 
+    // Setup auto-trigger for 7 AM every day
+    setupAutoTrigger() {
+        // Check if we should auto-start the timer
+        this.checkAutoStart();
+        
+        // Set up a daily check at midnight to schedule the next day's timer
+        this.scheduleDailyCheck();
+    }
+
+    // Check if we should auto-start the timer
+    checkAutoStart() {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const timeStr = now.toTimeString().slice(0, 5);
+        
+        // Check if it's an active day and we're in the timer window
+        const isActiveDay = this.config.timerSettings.activeDays.includes(dayOfWeek);
+        const isInTimerWindow = timeStr >= this.config.timerSettings.startTime && 
+                               timeStr <= this.config.timerSettings.endTime;
+        
+        if (isActiveDay && isInTimerWindow) {
+            console.log('Auto-starting timer - currently in active window');
+            this.isActive = true;
+            this.showNotification('Morning Timer Started', 'Your morning routine timer is now active!');
+        }
+    }
+
+    // Request audio permissions and enable audio context
+    async requestAudioPermissions() {
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            await Notification.requestPermission();
+        }
+
+        // Create a silent audio context to enable audio playback
+        try {
+            // Create a silent audio buffer to unlock audio context
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const buffer = audioContext.createBuffer(1, 1, 22050);
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start();
+            
+            console.log('Audio context initialized successfully');
+        } catch (error) {
+            console.warn('Could not initialize audio context:', error);
+        }
+
+        // Show a message to user about clicking to enable audio
+        this.showAudioEnableMessage();
+    }
+
+    // Show message to enable audio
+    showAudioEnableMessage() {
+        const message = document.createElement('div');
+        message.id = 'audio-enable-message';
+        message.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff6b6b;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+        `;
+        message.innerHTML = '🔊 Click anywhere to enable audio for the timer';
+        message.onclick = () => {
+            this.enableAudio();
+            message.remove();
+        };
+        
+        document.body.appendChild(message);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.remove();
+            }
+        }, 10000);
+    }
+
+    // Enable audio by playing a silent sound
+    enableAudio() {
+        try {
+            const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
+            audio.volume = 0.01;
+            audio.play().then(() => {
+                console.log('Audio enabled successfully');
+            }).catch(err => {
+                console.warn('Could not enable audio:', err);
+            });
+        } catch (error) {
+            console.warn('Audio enable failed:', error);
+        }
+    }
+
+    // Show browser notification
+    showNotification(title, message) {
+        if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: '/favicon.ico'
+                });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification(title, {
+                            body: message,
+                            icon: '/favicon.ico'
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    // Schedule daily check at midnight
+    scheduleDailyCheck() {
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0); // Set to midnight
+        
+        const msUntilMidnight = tomorrow.getTime() - now.getTime();
+        
+        setTimeout(() => {
+            this.checkAutoStart();
+            this.scheduleDailyCheck(); // Schedule the next day
+        }, msUntilMidnight);
+    }
+
     // Start the main clock
     startClock() {
         this.clockInterval = setInterval(() => {
@@ -247,7 +406,18 @@ class MorningTimer {
         const isActiveTime = timeStr >= this.config.timerSettings.startTime && 
                            timeStr <= this.config.timerSettings.endTime;
         
-        this.isActive = isActiveDay && isActiveTime;
+        // Only update isActive if we're not already in an active state
+        // This prevents interrupting an already running timer
+        if (!this.isActive) {
+            this.isActive = isActiveDay && isActiveTime;
+        } else {
+            // If we're currently active, check if we should stop
+            if (!isActiveDay || !isActiveTime) {
+                this.isActive = false;
+                this.stopFlickering();
+                this.currentInterval = null;
+            }
+        }
     }
 
     // Check for interval triggers
@@ -309,14 +479,84 @@ class MorningTimer {
         // Update background color
         document.body.style.backgroundColor = interval.color;
 
-        // Play TTS
-        await this.playTTS(interval.instruction);
+        // Announce the stage 3 times in a serene, calming voice
+        await this.announceStageMultipleTimes(interval.instruction, 3);
 
         // Play audio
         await this.playAudio(interval.audio);
 
         // Update display
         this.updateDisplay();
+    }
+
+    // Announce stage multiple times in a serene, calming voice
+    async announceStageMultipleTimes(instruction, times) {
+        for (let i = 0; i < times; i++) {
+            await this.playTTSWithCalmingVoice(instruction);
+            // Add a small pause between announcements (except for the last one)
+            if (i < times - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+    }
+
+    // Play TTS with a serene, calming female voice
+    playTTSWithCalmingVoice(text) {
+        return new Promise((resolve) => {
+            if (!('speechSynthesis' in window)) {
+                console.warn('TTS not supported');
+                resolve();
+                return;
+            }
+
+            // Cancel any existing speech
+            speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Use slower, more calming settings for announcements
+            utterance.rate = 0.8; // Slower than normal
+            utterance.pitch = 1.1; // Slightly higher pitch for female voice
+            utterance.volume = this.config.ttsSettings.volume;
+
+            // Try to find a calming female voice
+            const voices = speechSynthesis.getVoices();
+            const femaleVoice = this.findCalmingFemaleVoice(voices);
+            if (femaleVoice) {
+                utterance.voice = femaleVoice;
+            }
+
+            utterance.onend = resolve;
+            utterance.onerror = resolve;
+
+            speechSynthesis.speak(utterance);
+        });
+    }
+
+    // Find a calming female voice from available voices
+    findCalmingFemaleVoice(voices) {
+        // Look for female voices with calming characteristics
+        const femaleVoices = voices.filter(voice => 
+            voice.lang.startsWith('en') && 
+            (voice.name.toLowerCase().includes('female') || 
+             voice.name.toLowerCase().includes('woman') ||
+             voice.name.toLowerCase().includes('samantha') ||
+             voice.name.toLowerCase().includes('susan') ||
+             voice.name.toLowerCase().includes('karen') ||
+             voice.name.toLowerCase().includes('victoria') ||
+             voice.name.toLowerCase().includes('alex') ||
+             voice.name.toLowerCase().includes('siri') ||
+             voice.name.toLowerCase().includes('cortana'))
+        );
+
+        // Prefer voices that sound more calming
+        const calmingVoices = femaleVoices.filter(voice =>
+            voice.name.toLowerCase().includes('samantha') ||
+            voice.name.toLowerCase().includes('susan') ||
+            voice.name.toLowerCase().includes('victoria')
+        );
+
+        return calmingVoices[0] || femaleVoices[0] || null;
     }
 
     // Play text-to-speech
@@ -363,31 +603,63 @@ class MorningTimer {
                 this.audio.currentTime = 0;
             }
 
-            this.audio = new Audio(`audio/${filename}`);
-            this.audio.volume = this.config.audioSettings.volume;
-            this.audio.loop = true; // Enable looping
+            // Try multiple audio file paths for GitHub Pages compatibility
+            const audioPaths = [
+                `audio/${filename}`,
+                `./audio/${filename}`,
+                `/audio/${filename}`,
+                filename // fallback to direct filename
+            ];
 
-            // Set up 60-second timer
-            const playDuration = 60000; // 60 seconds in milliseconds
-            const stopTimer = setTimeout(() => {
-                if (this.audio) {
-                    this.audio.pause();
-                    this.audio.currentTime = 0;
+            let audioIndex = 0;
+            const tryNextAudio = () => {
+                if (audioIndex >= audioPaths.length) {
+                    console.warn(`Could not load audio file: ${filename}`);
+                    resolve();
+                    return;
                 }
-                resolve();
-            }, playDuration);
 
-            this.audio.onerror = () => {
-                console.warn(`Audio file not found: ${filename}`);
-                clearTimeout(stopTimer);
-                resolve();
+                const audioPath = audioPaths[audioIndex];
+                console.log(`Trying to load audio: ${audioPath}`);
+                
+                this.audio = new Audio(audioPath);
+                this.audio.volume = this.config.audioSettings.volume;
+                this.audio.loop = true; // Enable looping
+
+                // Set up 60-second timer
+                const playDuration = 60000; // 60 seconds in milliseconds
+                const stopTimer = setTimeout(() => {
+                    if (this.audio) {
+                        this.audio.pause();
+                        this.audio.currentTime = 0;
+                    }
+                    resolve();
+                }, playDuration);
+
+                this.audio.oncanplaythrough = () => {
+                    console.log(`Audio loaded successfully: ${audioPath}`);
+                    this.audio.play().then(() => {
+                        console.log(`Audio playing: ${filename}`);
+                    }).catch(err => {
+                        console.warn(`Audio playback failed for ${audioPath}:`, err);
+                        clearTimeout(stopTimer);
+                        audioIndex++;
+                        tryNextAudio();
+                    });
+                };
+
+                this.audio.onerror = () => {
+                    console.warn(`Audio file not found: ${audioPath}`);
+                    clearTimeout(stopTimer);
+                    audioIndex++;
+                    tryNextAudio();
+                };
+
+                // Load the audio
+                this.audio.load();
             };
 
-            this.audio.play().catch(err => {
-                console.warn('Audio playback failed:', err);
-                clearTimeout(stopTimer);
-                resolve();
-            });
+            tryNextAudio();
         });
     }
 
