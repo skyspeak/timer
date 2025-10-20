@@ -550,21 +550,16 @@ class MorningTimer {
         // Update background color
         document.body.style.backgroundColor = interval.color;
 
-        // Play numbered MP3 sequence based on interval
-        if (interval.id === 6) {
-            // For the 6th interval, play 6.mp3 three times
-            console.log('🎵 Playing 6.mp3 (3 times)...');
-            for (let repeat = 1; repeat <= 3; repeat++) {
-                console.log(`🎵 Playing 6.mp3 (${repeat}/3)...`);
-                await this.playAudio('6.mp3');
-                console.log(`✅ 6.mp3 (${repeat}/3) completed`);
-                if (repeat < 3) {
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                }
+        // Play the corresponding numbered MP3 file (3 times) for this interval
+        const mp3Number = interval.id;
+        console.log(`🎵 Playing ${mp3Number}.mp3 (3 times)...`);
+        for (let repeat = 1; repeat <= 3; repeat++) {
+            console.log(`🎵 Playing ${mp3Number}.mp3 (${repeat}/3)...`);
+            await this.playAudio(`${mp3Number}.mp3`);
+            console.log(`✅ ${mp3Number}.mp3 (${repeat}/3) completed`);
+            if (repeat < 3) {
+                await new Promise(resolve => setTimeout(resolve, 200));
             }
-        } else {
-            // For intervals 1-5, play the numbered sequence (1-5, each 3 times)
-            await this.playNumberedMP3Sequence();
         }
 
         // Then play the stage-specific audio file
@@ -576,37 +571,6 @@ class MorningTimer {
         this.updateDisplay();
     }
 
-    // Play numbered MP3 files in sequence before stage audio
-    async playNumberedMP3Sequence() {
-        console.log('🎵 Playing numbered MP3 sequence (1-5, each 3 times)...');
-        
-        for (let i = 1; i <= 5; i++) {
-            try {
-                console.log(`🎵 Playing ${i}.mp3 (3 times)...`);
-                
-                // Play each MP3 3 times
-                for (let repeat = 1; repeat <= 3; repeat++) {
-                    console.log(`🎵 Playing ${i}.mp3 (${repeat}/3)...`);
-                    await this.playAudio(`${i}.mp3`);
-                    console.log(`✅ ${i}.mp3 (${repeat}/3) completed`);
-                    
-                    // Short pause between repeats (except after the last repeat)
-                    if (repeat < 3) {
-                        await new Promise(resolve => setTimeout(resolve, 200));
-                    }
-                }
-                
-                // Short pause between files (except after the last one)
-                if (i < 5) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-            } catch (error) {
-                console.error(`❌ Failed to play ${i}.mp3:`, error);
-            }
-        }
-        
-        console.log('✅ Numbered MP3 sequence completed');
-    }
 
 
 
@@ -909,10 +873,23 @@ class MorningTimer {
         console.log('🧪 Testing numbered MP3 sequence...');
         
         try {
-            // Test the numbered MP3 sequence (1-5)
-            await this.playNumberedMP3Sequence();
+            // Test each interval's MP3 file (3 times each)
+            for (let i = 1; i <= 6; i++) {
+                console.log(`🎵 Testing ${i}.mp3 (3 times)...`);
+                for (let repeat = 1; repeat <= 3; repeat++) {
+                    console.log(`🎵 Playing ${i}.mp3 (${repeat}/3)...`);
+                    await this.playAudio(`${i}.mp3`);
+                    console.log(`✅ ${i}.mp3 (${repeat}/3) completed`);
+                    if (repeat < 3) {
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                    }
+                }
+                if (i < 6) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
             
-            console.log('✅ Numbered MP3 sequence test completed - you should have heard 1.mp3 through 5.mp3');
+            console.log('✅ Numbered MP3 sequence test completed - you should have heard 1.mp3 through 6.mp3 (each 3 times)');
             
         } catch (error) {
             console.error('❌ Numbered MP3 sequence test failed:', error);
