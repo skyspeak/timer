@@ -550,8 +550,22 @@ class MorningTimer {
         // Update background color
         document.body.style.backgroundColor = interval.color;
 
-        // Play numbered MP3 sequence (1-5) first
-        await this.playNumberedMP3Sequence();
+        // Play numbered MP3 sequence based on interval
+        if (interval.id === 6) {
+            // For the 6th interval, play 6.mp3 three times
+            console.log('🎵 Playing 6.mp3 (3 times)...');
+            for (let repeat = 1; repeat <= 3; repeat++) {
+                console.log(`🎵 Playing 6.mp3 (${repeat}/3)...`);
+                await this.playAudio('6.mp3');
+                console.log(`✅ 6.mp3 (${repeat}/3) completed`);
+                if (repeat < 3) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+            }
+        } else {
+            // For intervals 1-5, play the numbered sequence (1-5, each 3 times)
+            await this.playNumberedMP3Sequence();
+        }
 
         // Then play the stage-specific audio file
         if (interval.audio) {
@@ -564,13 +578,23 @@ class MorningTimer {
 
     // Play numbered MP3 files in sequence before stage audio
     async playNumberedMP3Sequence() {
-        console.log('🎵 Playing numbered MP3 sequence (1-5)...');
+        console.log('🎵 Playing numbered MP3 sequence (1-5, each 3 times)...');
         
         for (let i = 1; i <= 5; i++) {
             try {
-                console.log(`🎵 Playing ${i}.mp3...`);
-                await this.playAudio(`${i}.mp3`);
-                console.log(`✅ ${i}.mp3 completed`);
+                console.log(`🎵 Playing ${i}.mp3 (3 times)...`);
+                
+                // Play each MP3 3 times
+                for (let repeat = 1; repeat <= 3; repeat++) {
+                    console.log(`🎵 Playing ${i}.mp3 (${repeat}/3)...`);
+                    await this.playAudio(`${i}.mp3`);
+                    console.log(`✅ ${i}.mp3 (${repeat}/3) completed`);
+                    
+                    // Short pause between repeats (except after the last repeat)
+                    if (repeat < 3) {
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                    }
+                }
                 
                 // Short pause between files (except after the last one)
                 if (i < 5) {
