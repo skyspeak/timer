@@ -646,7 +646,7 @@ class MorningTimer {
                 this.audio = new Audio(audioPath);
                 this.audio.crossOrigin = 'anonymous';
                 this.audio.volume = this.config.audioSettings.volume;
-                this.audio.loop = true; // Enable looping
+                this.audio.loop = false; // Play once, no looping
 
                 // Only use AudioContext if it was already created by user interaction
                 try {
@@ -683,6 +683,12 @@ class MorningTimer {
                         audioIndex++;
                         tryNextAudio();
                     });
+                };
+
+                this.audio.onended = () => {
+                    console.log(`Audio finished playing: ${filename}`);
+                    clearTimeout(stopTimer);
+                    resolve();
                 };
 
                 this.audio.onerror = () => {
