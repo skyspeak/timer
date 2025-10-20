@@ -9,6 +9,8 @@ class MorningTimer {
         this.clockInterval = null;
         this.tts = null;
         this.audio = null;
+        this.audioContext = null; // Web Audio context to improve playback reliability
+        this.mediaElementSource = null;
         this.flickerTimeout = null;
         this.flickerOverlay = null;
         this.lastWarningTriggered = -1;
@@ -116,6 +118,8 @@ class MorningTimer {
 
     // Setup event listeners
     setupEventListeners() {
+        console.log('Setting up event listeners...');
+        
         // Browser visibility change - keep timer running in background
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
@@ -125,34 +129,42 @@ class MorningTimer {
             }
         });
 
-        // Enable audio on any user interaction
-        document.addEventListener('click', () => {
-            this.enableAudio();
-        }, { once: true });
-
-        document.addEventListener('keydown', () => {
-            this.enableAudio();
-        }, { once: true });
+        // Note: Audio will be enabled only when user clicks "Enable Sound" button
 
         // Settings panel toggle
-        document.getElementById('settings-toggle').addEventListener('click', () => {
-            this.toggleSettings();
-        });
+        const settingsToggle = document.getElementById('settings-toggle');
+        console.log('Settings toggle element:', settingsToggle);
+        if (settingsToggle) {
+            settingsToggle.addEventListener('click', () => {
+                this.toggleSettings();
+            });
+        } else {
+            console.error('Settings toggle element not found!');
+        }
 
-        document.getElementById('close-settings').addEventListener('click', () => {
-            this.toggleSettings();
-        });
+        const closeSettings = document.getElementById('close-settings');
+        if (closeSettings) {
+            closeSettings.addEventListener('click', () => {
+                this.toggleSettings();
+            });
+        }
 
         // Timer settings
-        document.getElementById('start-time').addEventListener('change', (e) => {
-            this.config.timerSettings.startTime = e.target.value;
-            this.saveConfig();
-        });
+        const startTime = document.getElementById('start-time');
+        if (startTime) {
+            startTime.addEventListener('change', (e) => {
+                this.config.timerSettings.startTime = e.target.value;
+                this.saveConfig();
+            });
+        }
 
-        document.getElementById('end-time').addEventListener('change', (e) => {
-            this.config.timerSettings.endTime = e.target.value;
-            this.saveConfig();
-        });
+        const endTime = document.getElementById('end-time');
+        if (endTime) {
+            endTime.addEventListener('change', (e) => {
+                this.config.timerSettings.endTime = e.target.value;
+                this.saveConfig();
+            });
+        }
 
         // Active days checkboxes
         document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach(checkbox => {
@@ -179,50 +191,94 @@ class MorningTimer {
             });
         });
 
-        document.getElementById('tts-voice').addEventListener('change', (e) => {
-            this.config.ttsSettings.voice = e.target.value;
-            this.saveConfig();
-        });
-
-        // Audio settings
-        document.getElementById('audio-volume').addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            document.getElementById('audio-volume-value').textContent = value.toFixed(1);
-            this.config.audioSettings.volume = value;
-            this.saveConfig();
-        });
-
-        ['fade-in', 'fade-out'].forEach(id => {
-            document.getElementById(id).addEventListener('change', (e) => {
-                const setting = id.replace('-', '');
-                this.config.audioSettings[setting] = parseInt(e.target.value);
+        const ttsVoice = document.getElementById('tts-voice');
+        if (ttsVoice) {
+            ttsVoice.addEventListener('change', (e) => {
+                this.config.ttsSettings.voice = e.target.value;
                 this.saveConfig();
             });
+        }
+
+        // Audio settings
+        const audioVolume = document.getElementById('audio-volume');
+        if (audioVolume) {
+            audioVolume.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                const audioVolumeValue = document.getElementById('audio-volume-value');
+                if (audioVolumeValue) {
+                    audioVolumeValue.textContent = value.toFixed(1);
+                }
+                this.config.audioSettings.volume = value;
+                this.saveConfig();
+            });
+        }
+
+        ['fade-in', 'fade-out'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('change', (e) => {
+                    const setting = id.replace('-', '');
+                    this.config.audioSettings[setting] = parseInt(e.target.value);
+                    this.saveConfig();
+                });
+            }
         });
 
         // Configuration actions
-        document.getElementById('add-interval').addEventListener('click', () => {
-            this.addInterval();
-        });
+        const addInterval = document.getElementById('add-interval');
+        console.log('Add interval element:', addInterval);
+        if (addInterval) {
+            addInterval.addEventListener('click', () => {
+                this.addInterval();
+            });
+        } else {
+            console.error('Add interval element not found!');
+        }
 
-        document.getElementById('export-config').addEventListener('click', () => {
-            this.exportConfig();
-        });
+        const exportConfig = document.getElementById('export-config');
+        if (exportConfig) {
+            exportConfig.addEventListener('click', () => {
+                this.exportConfig();
+            });
+        }
 
-        document.getElementById('import-config').addEventListener('click', () => {
-            document.getElementById('import-file').click();
-        });
+        const importConfig = document.getElementById('import-config');
+        if (importConfig) {
+            importConfig.addEventListener('click', () => {
+                const importFile = document.getElementById('import-file');
+                if (importFile) {
+                    importFile.click();
+                }
+            });
+        }
 
-        document.getElementById('import-file').addEventListener('change', (e) => {
-            this.importConfig(e.target.files[0]);
-        });
+        const importFile = document.getElementById('import-file');
+        if (importFile) {
+            importFile.addEventListener('change', (e) => {
+                this.importConfig(e.target.files[0]);
+            });
+        }
 
-        document.getElementById('reset-config').addEventListener('click', () => {
-            if (confirm('Are you sure you want to reset to default configuration?')) {
-                this.resetConfig();
-            }
-        });
+        const resetConfig = document.getElementById('reset-config');
+        if (resetConfig) {
+            resetConfig.addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset to default configuration?')) {
+                    this.resetConfig();
+                }
+            });
+        }
+
+        // MP3 Test button
+        const testMP3 = document.getElementById('test-tts');
+        if (testMP3) {
+            testMP3.addEventListener('click', () => {
+                this.testNumberedMP3Sequence();
+            });
+        }
+
+        // Note: Audio will be enabled only when user clicks "Enable Sound" button
     }
+
 
     // Load available TTS voices
     loadVoices() {
@@ -269,26 +325,11 @@ class MorningTimer {
         }
     }
 
-    // Request audio permissions and enable audio context
+    // Request notification permission only (no AudioContext here)
     async requestAudioPermissions() {
         // Request notification permission
         if ('Notification' in window && Notification.permission === 'default') {
             await Notification.requestPermission();
-        }
-
-        // Create a silent audio context to enable audio playback
-        try {
-            // Create a silent audio buffer to unlock audio context
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const buffer = audioContext.createBuffer(1, 1, 22050);
-            const source = audioContext.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioContext.destination);
-            source.start();
-            
-            console.log('Audio context initialized successfully');
-        } catch (error) {
-            console.warn('Could not initialize audio context:', error);
         }
 
         // Show a message to user about clicking to enable audio
@@ -330,18 +371,48 @@ class MorningTimer {
         }, 10000);
     }
 
+
     // Enable audio by playing a silent sound
     enableAudio() {
+        console.log('🔊 Enabling audio...');
         try {
-            const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
-            audio.volume = 0.01;
-            audio.play().then(() => {
-                console.log('Audio enabled successfully');
+            // Initialize (or resume) a shared AudioContext
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                if (!this.audioContext) {
+                    this.audioContext = new AudioCtx();
+                    console.log('🎵 AudioContext created:', this.audioContext.state);
+                } else if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                    console.log('🎵 AudioContext resumed:', this.audioContext.state);
+                }
+            }
+
+            // Test with a simple audio file first
+            const testAudio = new Audio('audio/wake_up_routine.mp3');
+            testAudio.volume = 0.1; // Low volume for testing
+            testAudio.play().then(() => {
+                console.log('✅ Audio test successful - you should hear wake_up_routine.mp3');
+                // Stop after 2 seconds
+                setTimeout(() => {
+                    testAudio.pause();
+                    testAudio.currentTime = 0;
+                }, 2000);
             }).catch(err => {
-                console.warn('Could not enable audio:', err);
+                console.error('❌ Audio test failed:', err);
+                console.log('🔍 Trying silent audio fallback...');
+                
+                // Fallback to silent audio
+                const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
+                silentAudio.volume = 0.01;
+                silentAudio.play().then(() => {
+                    console.log('✅ Silent audio enabled successfully');
+                }).catch(err2 => {
+                    console.error('❌ Silent audio also failed:', err2);
+                });
             });
         } catch (error) {
-            console.warn('Audio enable failed:', error);
+            console.error('❌ Audio enable failed:', error);
         }
     }
 
@@ -464,8 +535,8 @@ class MorningTimer {
         
         const warningMessage = `Warning! In 60 seconds, a new stage will begin: ${interval.instruction}`;
         
-        // Play warning TTS
-        await this.playTTS(warningMessage);
+        // Just log the warning - no audio
+        console.log(`⚠️ ${warningMessage}`);
     }
 
     // Trigger an interval
@@ -479,115 +550,41 @@ class MorningTimer {
         // Update background color
         document.body.style.backgroundColor = interval.color;
 
-        // Announce the stage 3 times in a serene, calming voice
-        await this.announceStageMultipleTimes(interval.instruction, 3);
+        // Play numbered MP3 sequence (1-5) first
+        await this.playNumberedMP3Sequence();
 
-        // Play audio
-        await this.playAudio(interval.audio);
+        // Then play the stage-specific audio file
+        if (interval.audio) {
+            await this.playAudio(interval.audio);
+        }
 
         // Update display
         this.updateDisplay();
     }
 
-    // Announce stage multiple times in a serene, calming voice
-    async announceStageMultipleTimes(instruction, times) {
-        for (let i = 0; i < times; i++) {
-            await this.playTTSWithCalmingVoice(instruction);
-            // Add a small pause between announcements (except for the last one)
-            if (i < times - 1) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
+    // Play numbered MP3 files in sequence before stage audio
+    async playNumberedMP3Sequence() {
+        console.log('🎵 Playing numbered MP3 sequence (1-5)...');
+        
+        for (let i = 1; i <= 5; i++) {
+            try {
+                console.log(`🎵 Playing ${i}.mp3...`);
+                await this.playAudio(`${i}.mp3`);
+                console.log(`✅ ${i}.mp3 completed`);
+                
+                // Short pause between files (except after the last one)
+                if (i < 5) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            } catch (error) {
+                console.error(`❌ Failed to play ${i}.mp3:`, error);
             }
         }
+        
+        console.log('✅ Numbered MP3 sequence completed');
     }
 
-    // Play TTS with a serene, calming female voice
-    playTTSWithCalmingVoice(text) {
-        return new Promise((resolve) => {
-            if (!('speechSynthesis' in window)) {
-                console.warn('TTS not supported');
-                resolve();
-                return;
-            }
 
-            // Cancel any existing speech
-            speechSynthesis.cancel();
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            
-            // Use slower, more calming settings for announcements
-            utterance.rate = 0.8; // Slower than normal
-            utterance.pitch = 1.1; // Slightly higher pitch for female voice
-            utterance.volume = this.config.ttsSettings.volume;
-
-            // Try to find a calming female voice
-            const voices = speechSynthesis.getVoices();
-            const femaleVoice = this.findCalmingFemaleVoice(voices);
-            if (femaleVoice) {
-                utterance.voice = femaleVoice;
-            }
-
-            utterance.onend = resolve;
-            utterance.onerror = resolve;
-
-            speechSynthesis.speak(utterance);
-        });
-    }
-
-    // Find a calming female voice from available voices
-    findCalmingFemaleVoice(voices) {
-        // Look for female voices with calming characteristics
-        const femaleVoices = voices.filter(voice => 
-            voice.lang.startsWith('en') && 
-            (voice.name.toLowerCase().includes('female') || 
-             voice.name.toLowerCase().includes('woman') ||
-             voice.name.toLowerCase().includes('samantha') ||
-             voice.name.toLowerCase().includes('susan') ||
-             voice.name.toLowerCase().includes('karen') ||
-             voice.name.toLowerCase().includes('victoria') ||
-             voice.name.toLowerCase().includes('alex') ||
-             voice.name.toLowerCase().includes('siri') ||
-             voice.name.toLowerCase().includes('cortana'))
-        );
-
-        // Prefer voices that sound more calming
-        const calmingVoices = femaleVoices.filter(voice =>
-            voice.name.toLowerCase().includes('samantha') ||
-            voice.name.toLowerCase().includes('susan') ||
-            voice.name.toLowerCase().includes('victoria')
-        );
-
-        return calmingVoices[0] || femaleVoices[0] || null;
-    }
-
-    // Play text-to-speech
-    playTTS(text) {
-        return new Promise((resolve) => {
-            if (!('speechSynthesis' in window)) {
-                console.warn('TTS not supported');
-                resolve();
-                return;
-            }
-
-            // Cancel any existing speech
-            speechSynthesis.cancel();
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = this.config.ttsSettings.rate;
-            utterance.pitch = this.config.ttsSettings.pitch;
-            utterance.volume = this.config.ttsSettings.volume;
-
-            if (this.config.ttsSettings.voice !== 'default') {
-                const voices = speechSynthesis.getVoices();
-                const voice = voices.find(v => v.name === this.config.ttsSettings.voice);
-                if (voice) utterance.voice = voice;
-            }
-
-            utterance.onend = resolve;
-            utterance.onerror = resolve;
-
-            speechSynthesis.speak(utterance);
-        });
-    }
 
     // Play audio file for at least 60 seconds
     playAudio(filename) {
@@ -623,8 +620,24 @@ class MorningTimer {
                 console.log(`Trying to load audio: ${audioPath}`);
                 
                 this.audio = new Audio(audioPath);
+                this.audio.crossOrigin = 'anonymous';
                 this.audio.volume = this.config.audioSettings.volume;
                 this.audio.loop = true; // Enable looping
+
+                // Only use AudioContext if it was already created by user interaction
+                try {
+                    if (this.audioContext && this.audioContext.state !== 'closed') {
+                        // Disconnect previous source if any
+                        if (this.mediaElementSource) {
+                            this.mediaElementSource.disconnect();
+                            this.mediaElementSource = null;
+                        }
+                        this.mediaElementSource = this.audioContext.createMediaElementSource(this.audio);
+                        this.mediaElementSource.connect(this.audioContext.destination);
+                    }
+                } catch (err) {
+                    console.warn('Falling back to direct media element playback:', err);
+                }
 
                 // Set up 60-second timer
                 const playDuration = 60000; // 60 seconds in milliseconds
@@ -706,7 +719,24 @@ class MorningTimer {
     // Toggle settings panel
     toggleSettings() {
         const panel = document.getElementById('settings-panel');
+        console.log('Settings panel:', panel);
+        console.log('Panel classes before toggle:', panel.classList.toString());
+        
         panel.classList.toggle('hidden');
+        
+        console.log('Panel classes after toggle:', panel.classList.toString());
+        console.log('Panel is hidden:', panel.classList.contains('hidden'));
+        
+        // Check if test button exists when panel is shown
+        if (!panel.classList.contains('hidden')) {
+            const testButton = document.getElementById('test-tts');
+            console.log('Test TTS button:', testButton);
+            if (testButton) {
+                console.log('✅ Test button found!');
+            } else {
+                console.error('❌ Test button not found!');
+            }
+        }
     }
 
     // Render intervals in settings
@@ -844,6 +874,21 @@ class MorningTimer {
         alert('Configuration reset to defaults!');
     }
 
+    // Test numbered MP3 sequence
+    async testNumberedMP3Sequence() {
+        console.log('🧪 Testing numbered MP3 sequence...');
+        
+        try {
+            // Test the numbered MP3 sequence (1-5)
+            await this.playNumberedMP3Sequence();
+            
+            console.log('✅ Numbered MP3 sequence test completed - you should have heard 1.mp3 through 5.mp3');
+            
+        } catch (error) {
+            console.error('❌ Numbered MP3 sequence test failed:', error);
+        }
+    }
+
     // Update settings UI with current config values
     updateSettingsUI() {
         // Timer settings
@@ -911,13 +956,14 @@ class MorningTimer {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Force refresh to ensure latest code is loaded
     window.app = new MorningTimer();
 });
 
 // Load voices when they become available
 if ('speechSynthesis' in window) {
     speechSynthesis.onvoiceschanged = () => {
-        if (window.app) {
+        if (window.app && typeof window.app.loadVoices === 'function') {
             window.app.loadVoices();
         }
     };
