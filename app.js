@@ -936,10 +936,24 @@ class MorningTimer {
         this.flickerOverlay.className = 'flicker-overlay';
         document.body.appendChild(this.flickerOverlay);
 
-        // Stop flickering after 30 seconds
-        this.flickerTimeout = setTimeout(() => {
-            this.stopFlickering();
-        }, 30000);
+        // Flicker exactly 10 times
+        let flickerCount = 0;
+        const flickerInterval = setInterval(() => {
+            flickerCount++;
+            
+            // Toggle the flicker effect
+            if (flickerCount % 2 === 1) {
+                document.body.classList.add('flicker-flash');
+            } else {
+                document.body.classList.remove('flicker-flash');
+            }
+            
+            // Stop after 10 flickers (20 toggles)
+            if (flickerCount >= 20) {
+                clearInterval(flickerInterval);
+                this.stopFlickering();
+            }
+        }, 150); // Flicker every 150ms for dramatic effect
     }
 
     // Stop the flickering effect

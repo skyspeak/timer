@@ -610,3 +610,35 @@ input[type="color"] {
     background: transparent;
     animation: screenFlicker 0.15s ease-in-out infinite;
 }
+
+/* Additional flicker flash effect for 10-flicker sequence */
+.flicker-flash {
+    animation: flickerFlash 0.3s ease-in-out;
+}
+
+@keyframes flickerFlash {
+    0% { 
+        opacity: 1; 
+        filter: brightness(1) contrast(1);
+    }
+    20% { 
+        opacity: 0.1; 
+        filter: brightness(5) contrast(3);
+    }
+    40% { 
+        opacity: 1; 
+        filter: brightness(1) contrast(1);
+    }
+    60% { 
+        opacity: 0.2; 
+        filter: brightness(4) contrast(2.5);
+    }
+    80% { 
+        opacity: 1; 
+        filter: brightness(1) contrast(1);
+    }
+    100% { 
+        opacity: 1; 
+        filter: brightness(1) contrast(1);
+    }
+}
