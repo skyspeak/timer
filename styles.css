@@ -56,6 +56,60 @@ body {
     letter-spacing: 0.05em;
 }
 
+/* Audio Enable Button */
+.audio-enable-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.audio-enable-container.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.enable-audio-btn {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+    padding: 1.5rem 3rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    animation: pulse 2s infinite;
+}
+
+.enable-audio-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(231, 76, 60, 0.6);
+    background: linear-gradient(135deg, #c0392b, #a93226);
+}
+
+.enable-audio-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+    }
+    50% {
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.8);
+    }
+    100% {
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+    }
+}
+
 /* Settings Panel */
 .settings-panel {
     position: fixed;

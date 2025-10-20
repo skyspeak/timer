@@ -14,6 +14,7 @@ class MorningTimer {
         this.flickerTimeout = null;
         this.flickerOverlay = null;
         this.lastWarningTriggered = -1;
+        this.audioEnabled = false; // Track if audio is enabled after user interaction
         
         this.init();
     }
@@ -129,7 +130,15 @@ class MorningTimer {
             }
         });
 
-        // Note: Audio will be enabled only when user clicks "Enable Sound" button
+        // Audio enable button
+        const enableAudioBtn = document.getElementById('enable-audio-btn');
+        if (enableAudioBtn) {
+            enableAudioBtn.addEventListener('click', () => {
+                this.enableAudio();
+            });
+        } else {
+            console.error('Audio enable button not found!');
+        }
 
         // Settings panel toggle
         const settingsToggle = document.getElementById('settings-toggle');
@@ -338,43 +347,24 @@ class MorningTimer {
 
     // Show message to enable audio
     showAudioEnableMessage() {
-        const message = document.createElement('div');
-        message.id = 'audio-enable-message';
-        message.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #ff6b6b;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            cursor: pointer;
-        `;
-        message.innerHTML = '🔊 Click anywhere to enable audio for the timer';
-        message.onclick = () => {
-            this.enableAudio();
-            message.remove();
-        };
-        
-        document.body.appendChild(message);
-        
-        // Auto-remove after 10 seconds
-        setTimeout(() => {
-            if (message.parentNode) {
-                message.remove();
-            }
-        }, 10000);
+        // Show the audio enable button
+        const audioContainer = document.getElementById('audio-enable-container');
+        if (audioContainer) {
+            audioContainer.classList.remove('hidden');
+        }
     }
 
 
     // Enable audio by playing a silent sound
     enableAudio() {
         console.log('🔊 Enabling audio...');
+        
+        // Hide the audio enable button
+        const audioContainer = document.getElementById('audio-enable-container');
+        if (audioContainer) {
+            audioContainer.classList.add('hidden');
+        }
+        
         try {
             // Initialize (or resume) a shared AudioContext
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -388,31 +378,50 @@ class MorningTimer {
                 }
             }
 
-            // Test with a simple audio file first
-            const testAudio = new Audio('audio/wake_up_routine.mp3');
-            testAudio.volume = 0.1; // Low volume for testing
-            testAudio.play().then(() => {
-                console.log('✅ Audio test successful - you should hear wake_up_routine.mp3');
-                // Stop after 2 seconds
-                setTimeout(() => {
-                    testAudio.pause();
-                    testAudio.currentTime = 0;
-                }, 2000);
-            }).catch(err => {
-                console.error('❌ Audio test failed:', err);
-                console.log('🔍 Trying silent audio fallback...');
+            // Test with a simple audio file first - try multiple paths for GitHub Pages
+            const testPaths = [
+                'audio/wake_up_routine.mp3',
+                './audio/wake_up_routine.mp3',
+                '/audio/wake_up_routine.mp3',
+                'https://gliu.github.io/timer/audio/wake_up_routine.mp3'
+            ];
+
+            let testIndex = 0;
+            const tryTestAudio = () => {
+                if (testIndex >= testPaths.length) {
+                    console.warn('⚠️ All audio test paths failed, enabling audio anyway');
+                    this.audioEnabled = true;
+                    return;
+                }
+
+                const testPath = testPaths[testIndex];
+                console.log(`🎵 Testing audio path: ${testPath}`);
                 
-                // Fallback to silent audio
-                const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
-                silentAudio.volume = 0.01;
-                silentAudio.play().then(() => {
-                    console.log('✅ Silent audio enabled successfully');
-                }).catch(err2 => {
-                    console.error('❌ Silent audio also failed:', err2);
+                const testAudio = new Audio(testPath);
+                testAudio.volume = 0.1; // Low volume for testing
+                testAudio.crossOrigin = 'anonymous';
+                
+                testAudio.play().then(() => {
+                    console.log('✅ Audio test successful - you should hear wake_up_routine.mp3');
+                    this.audioEnabled = true;
+                    // Stop after 2 seconds
+                    setTimeout(() => {
+                        testAudio.pause();
+                        testAudio.currentTime = 0;
+                    }, 2000);
+                }).catch(err => {
+                    console.warn(`❌ Audio test failed for ${testPath}:`, err);
+                    testIndex++;
+                    tryTestAudio();
                 });
-            });
+            };
+
+            tryTestAudio();
+
         } catch (error) {
             console.error('❌ Audio enable failed:', error);
+            // Enable audio anyway - user interaction was detected
+            this.audioEnabled = true;
         }
     }
 
@@ -578,6 +587,14 @@ class MorningTimer {
     playAudio(filename) {
         return new Promise((resolve) => {
             if (!filename) {
+                console.log('No filename provided, skipping audio');
+                resolve();
+                return;
+            }
+
+            // Check if audio is enabled and user has interacted
+            if (!this.audioEnabled) {
+                console.warn('Audio not enabled - user interaction required');
                 resolve();
                 return;
             }
@@ -593,43 +610,30 @@ class MorningTimer {
                 `audio/${filename}`,
                 `./audio/${filename}`,
                 `/audio/${filename}`,
+                `https://gliu.github.io/timer/audio/${filename}`, // GitHub Pages absolute path
                 filename // fallback to direct filename
             ];
 
             let audioIndex = 0;
             const tryNextAudio = () => {
                 if (audioIndex >= audioPaths.length) {
-                    console.warn(`Could not load audio file: ${filename}`);
+                    console.error(`❌ Could not load audio file: ${filename} - tried all paths`);
                     resolve();
                     return;
                 }
 
                 const audioPath = audioPaths[audioIndex];
-                console.log(`Trying to load audio: ${audioPath}`);
+                console.log(`🎵 Trying to load audio: ${audioPath}`);
                 
                 this.audio = new Audio(audioPath);
                 this.audio.crossOrigin = 'anonymous';
                 this.audio.volume = this.config.audioSettings.volume;
                 this.audio.loop = false; // Play once, no looping
 
-                // Only use AudioContext if it was already created by user interaction
-                try {
-                    if (this.audioContext && this.audioContext.state !== 'closed') {
-                        // Disconnect previous source if any
-                        if (this.mediaElementSource) {
-                            this.mediaElementSource.disconnect();
-                            this.mediaElementSource = null;
-                        }
-                        this.mediaElementSource = this.audioContext.createMediaElementSource(this.audio);
-                        this.mediaElementSource.connect(this.audioContext.destination);
-                    }
-                } catch (err) {
-                    console.warn('Falling back to direct media element playback:', err);
-                }
-
-                // Set up 60-second timer
+                // Set up 60-second timer (fallback if onended doesn't fire)
                 const playDuration = 60000; // 60 seconds in milliseconds
                 const stopTimer = setTimeout(() => {
+                    console.warn(`⏰ Audio timeout for ${filename}`);
                     if (this.audio) {
                         this.audio.pause();
                         this.audio.currentTime = 0;
@@ -638,11 +642,11 @@ class MorningTimer {
                 }, playDuration);
 
                 this.audio.oncanplaythrough = () => {
-                    console.log(`Audio loaded successfully: ${audioPath}`);
+                    console.log(`✅ Audio loaded successfully: ${audioPath}`);
                     this.audio.play().then(() => {
-                        console.log(`Audio playing: ${filename}`);
+                        console.log(`🔊 Audio playing: ${filename}`);
                     }).catch(err => {
-                        console.warn(`Audio playback failed for ${audioPath}:`, err);
+                        console.error(`❌ Audio playback failed for ${audioPath}:`, err);
                         clearTimeout(stopTimer);
                         audioIndex++;
                         tryNextAudio();
@@ -650,16 +654,24 @@ class MorningTimer {
                 };
 
                 this.audio.onended = () => {
-                    console.log(`Audio finished playing: ${filename}`);
+                    console.log(`✅ Audio finished playing: ${filename}`);
                     clearTimeout(stopTimer);
                     resolve();
                 };
 
-                this.audio.onerror = () => {
-                    console.warn(`Audio file not found: ${audioPath}`);
+                this.audio.onerror = (e) => {
+                    console.error(`❌ Audio file not found: ${audioPath}`, e);
                     clearTimeout(stopTimer);
                     audioIndex++;
                     tryNextAudio();
+                };
+
+                this.audio.onloadstart = () => {
+                    console.log(`🔄 Audio loading started: ${audioPath}`);
+                };
+
+                this.audio.onload = () => {
+                    console.log(`📁 Audio file loaded: ${audioPath}`);
                 };
 
                 // Load the audio
