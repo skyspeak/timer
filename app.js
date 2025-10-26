@@ -401,8 +401,8 @@ class MorningTimer {
             if (this.isGitHubPages) {
                 // Prioritize GitHub Pages HTTPS paths when running on GitHub Pages
                 testPaths = [
-                    'https://gliu.github.io/timer/audio/wake_up_routine.mp3',
                     'https://skyspeak.github.io/timer/audio/wake_up_routine.mp3',
+                    'https://gliu.github.io/timer/audio/wake_up_routine.mp3',
                     '/audio/wake_up_routine.mp3',
                     'audio/wake_up_routine.mp3',
                     './audio/wake_up_routine.mp3'
@@ -640,8 +640,8 @@ class MorningTimer {
             if (this.isGitHubPages) {
                 // Prioritize GitHub Pages HTTPS paths when running on GitHub Pages
                 audioPaths = [
-                    `https://gliu.github.io/timer/audio/${filename}`,
                     `https://skyspeak.github.io/timer/audio/${filename}`,
+                    `https://gliu.github.io/timer/audio/${filename}`,
                     `/audio/${filename}`,
                     `audio/${filename}`,
                     `./audio/${filename}`,
