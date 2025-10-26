@@ -27,6 +27,8 @@ class MorningTimer {
         
         if (this.isGitHubPages) {
             console.log('🌐 Running on GitHub Pages - using HTTPS audio paths');
+            console.log('🌐 Current hostname:', window.location.hostname);
+            console.log('🌐 Will use skyspeak.github.io for audio files');
         } else {
             console.log('🏠 Running locally - using local audio paths');
         }
@@ -399,9 +401,10 @@ class MorningTimer {
             // Test with a simple audio file first - try multiple paths for GitHub Pages
             let testPaths;
             if (this.isGitHubPages) {
-                // Use only the correct GitHub Pages HTTPS path
+                // Use only the correct GitHub Pages HTTPS path with cache busting
+                const cacheBuster = '?v=' + Date.now();
                 testPaths = [
-                    'https://skyspeak.github.io/timer/audio/wake_up_routine.mp3',
+                    'https://skyspeak.github.io/timer/audio/wake_up_routine.mp3' + cacheBuster,
                     '/audio/wake_up_routine.mp3',
                     'audio/wake_up_routine.mp3',
                     './audio/wake_up_routine.mp3'
@@ -637,9 +640,10 @@ class MorningTimer {
             // Try multiple audio file paths for GitHub Pages compatibility
             let audioPaths;
             if (this.isGitHubPages) {
-                // Use only the correct GitHub Pages HTTPS path
+                // Use only the correct GitHub Pages HTTPS path with cache busting
+                const cacheBuster = '?v=' + Date.now();
                 audioPaths = [
-                    `https://skyspeak.github.io/timer/audio/${filename}`,
+                    `https://skyspeak.github.io/timer/audio/${filename}` + cacheBuster,
                     `/audio/${filename}`,
                     `audio/${filename}`,
                     `./audio/${filename}`,
