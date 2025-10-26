@@ -995,12 +995,14 @@ class MorningTimer {
     testTimerAt7AM() {
         console.log('🧪 Testing timer at 7:00 AM...');
         
-        // Set current time to 7:00 AM
+        // Set current time to 7:00 AM in LOCAL time zone
         const testTime = new Date();
         testTime.setHours(7, 0, 0, 0);
         this.currentTime = testTime;
         
-        console.log('🧪 Set time to:', this.currentTime.toTimeString());
+        console.log('🧪 Set LOCAL time to:', this.currentTime.toTimeString());
+        console.log('🧪 UTC time:', this.currentTime.toUTCString());
+        console.log('🧪 Time zone offset:', this.currentTime.getTimezoneOffset(), 'minutes');
         
         // Force check active state and intervals
         this.checkActiveState();
@@ -1015,6 +1017,8 @@ class MorningTimer {
         console.log('🔍 Timer Status Check:');
         console.log('🔍 Current time:', this.currentTime.toTimeString());
         console.log('🔍 Current day:', this.currentTime.getDay());
+        console.log('🔍 Time zone offset:', this.currentTime.getTimezoneOffset(), 'minutes');
+        console.log('🔍 UTC time:', this.currentTime.toUTCString());
         console.log('🔍 Is active:', this.isActive);
         console.log('🔍 Audio enabled:', this.audioEnabled);
         console.log('🔍 Start time:', this.config.timerSettings.startTime);
@@ -1022,6 +1026,7 @@ class MorningTimer {
         console.log('🔍 Active days:', this.config.timerSettings.activeDays);
         console.log('🔍 Last triggered:', this.lastTriggered);
         console.log('🔍 Current interval:', this.currentInterval);
+        console.log('🔍 Environment:', this.isGitHubPages ? 'GitHub Pages' : 'Local');
     }
 
     // Update settings UI with current config values
