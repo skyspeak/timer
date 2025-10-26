@@ -527,7 +527,19 @@ class MorningTimer {
     checkActiveState() {
         const now = this.currentTime;
         const dayOfWeek = now.getDay();
-        const timeStr = now.toTimeString().slice(0, 5);
+        
+        // Convert to PST time for GitHub Pages
+        let timeStr;
+        if (this.isGitHubPages) {
+            // Convert UTC to PST (UTC-8) for GitHub Pages
+            const pstTime = new Date(now.getTime() - (8 * 60 * 60 * 1000));
+            timeStr = pstTime.toTimeString().slice(0, 5);
+            console.log(`🌐 GitHub Pages: UTC ${now.toTimeString().slice(0, 5)} = PST ${timeStr}`);
+        } else {
+            // Use local time for local testing
+            timeStr = now.toTimeString().slice(0, 5);
+            console.log(`🏠 Local time: ${timeStr}`);
+        }
         
         const isActiveDay = this.config.timerSettings.activeDays.includes(dayOfWeek);
         const isActiveTime = timeStr >= this.config.timerSettings.startTime && 
@@ -562,11 +574,20 @@ class MorningTimer {
         }
 
         const now = this.currentTime;
-        const startTime = new Date(now);
+        
+        // Convert to PST time for GitHub Pages
+        let workingTime = now;
+        if (this.isGitHubPages) {
+            // Convert UTC to PST (UTC-8) for GitHub Pages
+            workingTime = new Date(now.getTime() - (8 * 60 * 60 * 1000));
+            console.log(`🌐 Using PST time for intervals: ${workingTime.toTimeString().slice(0, 5)}`);
+        }
+        
+        const startTime = new Date(workingTime);
         const [startHour, startMinute] = this.config.timerSettings.startTime.split(':').map(Number);
         startTime.setHours(startHour, startMinute, 0, 0);
 
-        const elapsedMinutes = Math.floor((now - startTime) / (1000 * 60));
+        const elapsedMinutes = Math.floor((workingTime - startTime) / (1000 * 60));
         
         console.log(`⏰ Checking intervals - elapsed: ${elapsedMinutes} minutes, audio enabled: ${this.audioEnabled}`);
 
@@ -1019,6 +1040,13 @@ class MorningTimer {
         console.log('🔍 Current day:', this.currentTime.getDay());
         console.log('🔍 Time zone offset:', this.currentTime.getTimezoneOffset(), 'minutes');
         console.log('🔍 UTC time:', this.currentTime.toUTCString());
+        
+        // Show PST conversion for GitHub Pages
+        if (this.isGitHubPages) {
+            const pstTime = new Date(this.currentTime.getTime() - (8 * 60 * 60 * 1000));
+            console.log('🔍 PST time (GitHub Pages):', pstTime.toTimeString());
+        }
+        
         console.log('🔍 Is active:', this.isActive);
         console.log('🔍 Audio enabled:', this.audioEnabled);
         console.log('🔍 Start time:', this.config.timerSettings.startTime);
