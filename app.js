@@ -534,7 +534,10 @@ class MorningTimer {
 
     // Check for interval triggers
     checkIntervals() {
-        if (!this.isActive) return;
+        if (!this.isActive) {
+            console.log('⏰ Timer not active - skipping interval check');
+            return;
+        }
 
         const now = this.currentTime;
         const startTime = new Date(now);
@@ -542,9 +545,12 @@ class MorningTimer {
         startTime.setHours(startHour, startMinute, 0, 0);
 
         const elapsedMinutes = Math.floor((now - startTime) / (1000 * 60));
+        
+        console.log(`⏰ Checking intervals - elapsed: ${elapsedMinutes} minutes, audio enabled: ${this.audioEnabled}`);
 
         // Validate elapsed minutes
         if (elapsedMinutes < 0 || elapsedMinutes > this.config.timerSettings.totalDuration) {
+            console.log(`⏰ Elapsed minutes ${elapsedMinutes} out of range (0-${this.config.timerSettings.totalDuration})`);
             return;
         }
 
@@ -582,6 +588,9 @@ class MorningTimer {
 
     // Trigger an interval
     async triggerInterval(interval) {
+        console.log(`🎯 Triggering interval: ${interval.instruction}`);
+        console.log(`🎯 Audio enabled: ${this.audioEnabled}`);
+        
         this.lastTriggered = interval.id;
         this.currentInterval = interval;
 
@@ -605,6 +614,7 @@ class MorningTimer {
 
         // Then play the stage-specific audio file
         if (interval.audio) {
+            console.log(`🎵 Playing stage audio: ${interval.audio}`);
             await this.playAudio(interval.audio);
         }
 
