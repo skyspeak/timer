@@ -297,6 +297,21 @@ class MorningTimer {
             });
         }
 
+        // Debug test buttons
+        const testTimerManual = document.getElementById('test-timer-manual');
+        if (testTimerManual) {
+            testTimerManual.addEventListener('click', () => {
+                this.testTimerAt7AM();
+            });
+        }
+
+        const testTimerStatus = document.getElementById('test-timer-status');
+        if (testTimerStatus) {
+            testTimerStatus.addEventListener('click', () => {
+                this.checkTimerStatus();
+            });
+        }
+
         // Note: Audio will be enabled only when user clicks "Enable Sound" button
     }
 
@@ -518,14 +533,21 @@ class MorningTimer {
         const isActiveTime = timeStr >= this.config.timerSettings.startTime && 
                            timeStr <= this.config.timerSettings.endTime;
         
+        console.log(`🕐 Time check: ${timeStr}, Day: ${dayOfWeek}, Active days: [${this.config.timerSettings.activeDays.join(',')}]`);
+        console.log(`🕐 Is active day: ${isActiveDay}, Is active time: ${isActiveTime}, Currently active: ${this.isActive}`);
+        
         // Only update isActive if we're not already in an active state
         // This prevents interrupting an already running timer
         if (!this.isActive) {
             this.isActive = isActiveDay && isActiveTime;
+            if (this.isActive) {
+                console.log('🟢 Timer activated!');
+            }
         } else {
             // If we're currently active, check if we should stop
             if (!isActiveDay || !isActiveTime) {
                 this.isActive = false;
+                console.log('🔴 Timer deactivated');
                 this.stopFlickering();
                 this.currentInterval = null;
             }
@@ -967,6 +989,39 @@ class MorningTimer {
         } catch (error) {
             console.error('❌ Numbered MP3 sequence test failed:', error);
         }
+    }
+
+    // Debug method to test timer at 7:00 AM
+    testTimerAt7AM() {
+        console.log('🧪 Testing timer at 7:00 AM...');
+        
+        // Set current time to 7:00 AM
+        const testTime = new Date();
+        testTime.setHours(7, 0, 0, 0);
+        this.currentTime = testTime;
+        
+        console.log('🧪 Set time to:', this.currentTime.toTimeString());
+        
+        // Force check active state and intervals
+        this.checkActiveState();
+        this.checkIntervals();
+        this.updateDisplay();
+        
+        console.log('🧪 Timer test completed');
+    }
+
+    // Debug method to check timer status
+    checkTimerStatus() {
+        console.log('🔍 Timer Status Check:');
+        console.log('🔍 Current time:', this.currentTime.toTimeString());
+        console.log('🔍 Current day:', this.currentTime.getDay());
+        console.log('🔍 Is active:', this.isActive);
+        console.log('🔍 Audio enabled:', this.audioEnabled);
+        console.log('🔍 Start time:', this.config.timerSettings.startTime);
+        console.log('🔍 End time:', this.config.timerSettings.endTime);
+        console.log('🔍 Active days:', this.config.timerSettings.activeDays);
+        console.log('🔍 Last triggered:', this.lastTriggered);
+        console.log('🔍 Current interval:', this.currentInterval);
     }
 
     // Update settings UI with current config values
