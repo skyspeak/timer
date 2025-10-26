@@ -21,6 +21,16 @@ class MorningTimer {
 
     // Initialize the application
     init() {
+        // Detect if running on GitHub Pages
+        this.isGitHubPages = window.location.hostname.includes('github.io') || 
+                           window.location.hostname.includes('github.com');
+        
+        if (this.isGitHubPages) {
+            console.log('🌐 Running on GitHub Pages - using HTTPS audio paths');
+        } else {
+            console.log('🏠 Running locally - using local audio paths');
+        }
+        
         this.setupEventListeners();
         this.loadVoices();
         this.startClock();
@@ -351,6 +361,14 @@ class MorningTimer {
         const audioContainer = document.getElementById('audio-enable-container');
         if (audioContainer) {
             audioContainer.classList.remove('hidden');
+            
+            // Add GitHub Pages specific message
+            if (this.isGitHubPages) {
+                const button = document.getElementById('enable-audio-btn');
+                if (button) {
+                    button.innerHTML = '🔊 Enable Audio for Timer<br><small>Click to enable audio on GitHub Pages</small>';
+                }
+            }
         }
     }
 
@@ -379,12 +397,24 @@ class MorningTimer {
             }
 
             // Test with a simple audio file first - try multiple paths for GitHub Pages
-            const testPaths = [
-                'audio/wake_up_routine.mp3',
-                './audio/wake_up_routine.mp3',
-                '/audio/wake_up_routine.mp3',
-                'https://gliu.github.io/timer/audio/wake_up_routine.mp3'
-            ];
+            let testPaths;
+            if (this.isGitHubPages) {
+                // Prioritize GitHub Pages HTTPS paths when running on GitHub Pages
+                testPaths = [
+                    'https://gliu.github.io/timer/audio/wake_up_routine.mp3',
+                    'https://skyspeak.github.io/timer/audio/wake_up_routine.mp3',
+                    '/audio/wake_up_routine.mp3',
+                    'audio/wake_up_routine.mp3',
+                    './audio/wake_up_routine.mp3'
+                ];
+            } else {
+                // Use local paths when running locally
+                testPaths = [
+                    'audio/wake_up_routine.mp3',
+                    './audio/wake_up_routine.mp3',
+                    '/audio/wake_up_routine.mp3'
+                ];
+            }
 
             let testIndex = 0;
             const tryTestAudio = () => {
@@ -606,13 +636,26 @@ class MorningTimer {
             }
 
             // Try multiple audio file paths for GitHub Pages compatibility
-            const audioPaths = [
-                `audio/${filename}`,
-                `./audio/${filename}`,
-                `/audio/${filename}`,
-                `https://gliu.github.io/timer/audio/${filename}`, // GitHub Pages absolute path
-                filename // fallback to direct filename
-            ];
+            let audioPaths;
+            if (this.isGitHubPages) {
+                // Prioritize GitHub Pages HTTPS paths when running on GitHub Pages
+                audioPaths = [
+                    `https://gliu.github.io/timer/audio/${filename}`,
+                    `https://skyspeak.github.io/timer/audio/${filename}`,
+                    `/audio/${filename}`,
+                    `audio/${filename}`,
+                    `./audio/${filename}`,
+                    filename
+                ];
+            } else {
+                // Use local paths when running locally
+                audioPaths = [
+                    `audio/${filename}`,
+                    `./audio/${filename}`,
+                    `/audio/${filename}`,
+                    filename
+                ];
+            }
 
             let audioIndex = 0;
             const tryNextAudio = () => {
@@ -645,8 +688,14 @@ class MorningTimer {
                     console.log(`✅ Audio loaded successfully: ${audioPath}`);
                     this.audio.play().then(() => {
                         console.log(`🔊 Audio playing: ${filename}`);
+                        if (this.isGitHubPages) {
+                            console.log('🌐 GitHub Pages audio playback successful!');
+                        }
                     }).catch(err => {
                         console.error(`❌ Audio playback failed for ${audioPath}:`, err);
+                        if (this.isGitHubPages) {
+                            console.error('🌐 GitHub Pages audio error - trying next path...');
+                        }
                         clearTimeout(stopTimer);
                         audioIndex++;
                         tryNextAudio();
